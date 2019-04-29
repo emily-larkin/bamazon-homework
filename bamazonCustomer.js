@@ -19,7 +19,6 @@ var connection = mysql.createConnection({
 // connect to the mysql server and sql database
 connection.connect(function (err) {
   if (err) throw err;
-  console.log("connected")
   showAll();
 });
 
@@ -32,49 +31,33 @@ function showAll() {
   });
 }
 
-
 function placeOrder() {
   inquirer
-    .prompt({
-      name: "action",
+    .prompt([{
+      name: "itemID",
       type: "input",
       message: "What is the ID of the product you would like to order?"
     }, {
-      name: "amount",
+      name: "quantity",
       type: "input",
-      message: "What is the quantity of the product you would like to order?"
-    })
+      message: "What quantity would you like to order?"
+    }])
     .then(function (answer) {
-      var chosenItem;
-      for (var i = 0; i < results.length; i++) {
-        if (results[i].item_name === answer.choice) {
-          chosenItem = results[i];
-        }
-      }
-      if (chosenItem.stock_quantity < parseInt(answer.order)) {
-        connection.query(
-          "UPDATE products SET ? WHERE ?",
+      connection.query(
+          "UPDATE products SET stock_quantity=stock_quantity-? WHERE ?",
           [{
-              stock_quantity: answer.order
-            },
-            {
-              item_id: chosenItem.id
-            }
-          ],
-          function (error) {
-            if (error) throw err;
+            stock_quantity: answer.quantity,
+            item_id: answer.itemID
+          }],
+          function() {
             console.log("Order placed successfully!");
-            updateQuantity();
-            showAll();
+            console.log( "Updating stock...\n");
+            connection.end();
           }
-        );
-      } else {
-        console.log("There is not enough inventory. Try again.");
-        showAll();
-      }
+      );
     });
 }
-
-function updateQuantity() {
-  console.log("hi");
-}
+// {
+//   console.log("There is not enough inventory. Try again.");
+//   showAll();
+// }
